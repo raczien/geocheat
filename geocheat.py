@@ -78,13 +78,17 @@ def create_map(dir, data, lat, lon):
         root.destroy()
         cheatycheat()
 
-    label = Label(master=root, text=data, font=('Helvatical bold', 12)).pack()
+    Label(master=root, text=data, font=('Helvatical bold', 12)).pack()
     yes_button = tkinter.Button(master=container, text="QUIT", height=4, width=10, command=_quit)
     yes_button.config(font=('Helvatical bold', 12))
     yes_button.pack(side=LEFT)
     no_button = tkinter.Button(master=container, text="CONTINUE", height=4, width=10, command=_continue)
     no_button.config(font=('Helvatical bold', 12))
     no_button.pack(side=LEFT)
+
+    def on_closing():
+        exit(1)
+    root.protocol("WM_DELETE_WINDOW", on_closing)
 
     tkinter.mainloop()
 
@@ -101,7 +105,7 @@ def get_url():
     element_name = "Adressfeld"
     dlg = app.top_window()
     url = dlg.child_window(title=element_name, control_type="Edit").get_value()
-    print(url)
+    #print(url)
     if 'geoguessr' not in url:
         ctypes.windll.user32.MessageBoxW(0, 'Window Geoguessr not found on Top Level.', "Geocheater", 1)
         exit(1)
@@ -123,6 +127,8 @@ def cheatycheat():
     geolocator = Nominatim(user_agent="coordinateconverter")
     location = geolocator.reverse(coord_string, language='en')
     country = location.raw['address']['country']
+    if country == 'Palestinian Territories':
+        country = 'Israel'
     try:
         capital = CountryInfo(country).capital()
     except KeyError:
