@@ -1,5 +1,5 @@
-import os
-
+from mpl_toolkits.basemap import Basemap
+import matplotlib.pyplot as plt
 import requests
 from geopy.geocoders import Nominatim
 from bs4 import BeautifulSoup
@@ -10,6 +10,9 @@ from geographiclib.geodesic import Geodesic
 import ctypes
 from pywinauto import Application
 from pywinauto.findwindows import ElementAmbiguousError
+import tkinter
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from tkinter import *
 
 
 def degree_to_direction(deg):
@@ -49,6 +52,45 @@ def degree_to_direction(deg):
     return dir
 
 
+def create_map(dir, data, lat, lon):
+    root = Tk()
+    root.wm_title("Geocheat")
+
+    fig = plt.figure(figsize=(8, 6))
+    m = Basemap(projection='mill', llcrnrlat=-90,  urcrnrlat=90, llcrnrlon=-180, urcrnrlon=180, resolution='c')
+    m.drawcoastlines()
+    m.scatter(lon, lat, latlon=True, s=60, c='red', marker="o", alpha=1, edgecolor='k', linewidth=1, zorder=2)
+    plt.title(dir, fontsize=10)
+    canvas = FigureCanvasTkAgg(fig, master=root)
+    canvas.draw()
+    canvas.get_tk_widget().pack(side=tkinter.TOP, fill=tkinter.BOTH, expand=1)
+
+    container = Frame(master=root)
+    container.pack(side='top', padx='5', pady='5')
+
+    def _quit():
+        root.quit()
+        root.destroy()
+        exit(1)
+
+    def _continue():
+        root.quit()
+        root.destroy()
+        cheatycheat()
+
+    label = Label(master=root, text=data, font=('Helvatical bold', 12)).pack()
+    yes_button = tkinter.Button(master=container, text="QUIT", height=4, width=10, command=_quit)
+    yes_button.config(font=('Helvatical bold', 12))
+    yes_button.pack(side=LEFT)
+    no_button = tkinter.Button(master=container, text="CONTINUE", height=4, width=10, command=_continue)
+    no_button.config(font=('Helvatical bold', 12))
+    no_button.pack(side=LEFT)
+
+    tkinter.mainloop()
+
+
+
+
 def get_url():
     app = Application(backend='uia')
     try:
@@ -66,7 +108,7 @@ def get_url():
     return url
 
 
-def main():
+def cheatycheat():
     r = requests.get(get_url())
     soup = BeautifulSoup(r.text, 'html.parser')
     game = soup.find(id="__NEXT_DATA__")
@@ -85,8 +127,9 @@ def main():
         capital = CountryInfo(country).capital()
     except KeyError:
         r = ctypes.windll.user32.MessageBoxW(0, str(location.raw['address']), "Geocheater", 4)
+        create_map(str(location.raw['address']), lat, lng)
         if r == 6:
-            main()
+            cheatycheat()
         else:
             exit(1)
     loc = geolocator.geocode(capital)
@@ -101,18 +144,22 @@ def main():
     prepared_json = str(location.raw['address']).replace("': '", "\": \"").replace("', '", "\", \"").replace("\", '", "\", \"").replace("': \"", "\": \"").replace("'}", "\"}").replace("{'", "{\"")
     j = json.loads(prepared_json)
     text = ''
-    for key in j:
+    counter = 0
+    for key in reversed(list(j.keys())):
         value = j[key]
         if key != 'country_code' and key != 'postcode':
-            temp = key.capitalize() + ': ' + value + '\n'
+            temp = key.upper() + ': ' + value
+            if counter % 2 != 0:
+                temp += '\n'
+            else:
+                temp += ',   '
             text += temp
+            counter += 1
 
-    text = text + '\nDirection: ' + str(int(km)) + ' km' + ' (' + d + ')' + ' from ' + capital
-    text += '\nContinue?'
-    result = ctypes.windll.user32.MessageBoxW(0, text, "Geocheater", 4)
-    if result == 6:
-        main()
+    #text = text + 'Direction: ' + str(int(km)) + ' km' + ' (' + d + ')' + ' from ' + capital
+    direction = 'Direction: ' + str(int(km)) + ' km' + ' (' + d + ')' + ' from ' + capital
+    create_map(direction, text, lat, lng)
 
 
 if __name__ == '__main__':
-    main()
+    cheatycheat()
