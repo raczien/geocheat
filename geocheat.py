@@ -57,7 +57,7 @@ def create_map(dir, data, lat, lon):
     root.wm_title("Geocheat")
 
     fig = plt.figure(figsize=(8, 6))
-    m = Basemap(projection='mill', llcrnrlat=-90,  urcrnrlat=90, llcrnrlon=-180, urcrnrlon=180, resolution='c')
+    m = Basemap(projection='mill', llcrnrlat=-90, urcrnrlat=90, llcrnrlon=-180, urcrnrlon=180, resolution='c')
     m.drawcoastlines()
     m.scatter(lon, lat, latlon=True, s=60, c='red', marker="o", alpha=1, edgecolor='k', linewidth=1, zorder=2)
     plt.title(dir, fontsize=10)
@@ -88,11 +88,10 @@ def create_map(dir, data, lat, lon):
 
     def on_closing():
         exit(1)
+
     root.protocol("WM_DELETE_WINDOW", on_closing)
 
     tkinter.mainloop()
-
-
 
 
 def get_url():
@@ -100,12 +99,13 @@ def get_url():
     try:
         app.connect(title_re=".*Opera.*")
     except ElementAmbiguousError:
-        ctypes.windll.user32.MessageBoxW(0, 'Multiple Browsers open. Geoguessr top level in ONE browser needed.', "Geocheater", 1)
+        ctypes.windll.user32.MessageBoxW(0, 'Multiple Browsers open. Geoguessr top level in ONE browser needed.',
+                                         "Geocheater", 1)
         exit(1)
     element_name = "Adressfeld"
     dlg = app.top_window()
     url = dlg.child_window(title=element_name, control_type="Edit").get_value()
-    #print(url)
+    # print(url)
     if 'geoguessr' not in url:
         ctypes.windll.user32.MessageBoxW(0, 'Window Geoguessr not found on Top Level.', "Geocheater", 1)
         exit(1)
@@ -122,7 +122,7 @@ def cheatycheat():
     except KeyError:
         ctypes.windll.user32.MessageBoxW(0, 'Need to start a Game first.', "Geocheater", 1)
         exit(1)
-    lat, lng = rounds[len(rounds)-1]["lat"], rounds[len(rounds)-1]["lng"]
+    lat, lng = rounds[len(rounds) - 1]["lat"], rounds[len(rounds) - 1]["lng"]
     coord_string = "" + str(lat) + ", " + str(lng)
     geolocator = Nominatim(user_agent="coordinateconverter")
     location = geolocator.reverse(coord_string, language='en')
@@ -147,7 +147,9 @@ def cheatycheat():
         deg = 180 + deg
         deg += 180
     d = degree_to_direction(deg)
-    prepared_json = str(location.raw['address']).replace("': '", "\": \"").replace("', '", "\", \"").replace("\", '", "\", \"").replace("': \"", "\": \"").replace("'}", "\"}").replace("{'", "{\"")
+    prepared_json = str(location.raw['address']).replace("': '", "\": \"").replace("', '", "\", \"").replace("\", '",
+                                                                                                             "\", \"").replace(
+        "': \"", "\": \"").replace("'}", "\"}").replace("{'", "{\"")
     j = json.loads(prepared_json)
     text = ''
     counter = 0
@@ -162,7 +164,7 @@ def cheatycheat():
             text += temp
             counter += 1
 
-    #text = text + 'Direction: ' + str(int(km)) + ' km' + ' (' + d + ')' + ' from ' + capital
+    # text = text + 'Direction: ' + str(int(km)) + ' km' + ' (' + d + ')' + ' from ' + capital
     direction = 'Direction: ' + str(int(km)) + ' km' + ' (' + d + ')' + ' from ' + capital
     create_map(direction, text, lat, lng)
 
